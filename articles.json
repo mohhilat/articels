@@ -1,12 +1,26 @@
 [
   {
+    "slug": "my-first-article",
     "title": "مقالي الأول",
-    "content": "mnbjknjnj"
+    "publishedAt": "2025-10-10T10:00:00.000Z",
+    "mainImage": "images/profile.jpg",
+    "body": [
+      {
+        "_type": "block",
+        "style": "normal",
+        "children": [
+          {
+            "_type": "span",
+            "text": "هذا هو محتوى المقال الأول. يمكن كتابة الفقرات هنا."
+          }
+        ]
+      }
+    ]
   },
   {
     "slug": "my-second-article",
     "title": "المقال الثاني: رحلة في البرمجة",
-    "publishedAt": "2023-10-25T12:30:00.000Z",
+    "publishedAt": "2025-10-09T12:30:00.000Z",
     "mainImage": "images/image2.jpg",
     "body": [
       {
@@ -16,6 +30,26 @@
           {
             "_type": "span",
             "text": "محتوى المقال الثاني يركز على تجربة تعلم لغة برمجة جديدة."
+          }
+        ]
+      },
+      {
+        "_type": "block",
+        "style": "h2",
+        "children": [
+          {
+            "_type": "span",
+            "text": "هذا عنوان فرعي"
+          }
+        ]
+      },
+      {
+        "_type": "block",
+        "style": "normal",
+        "children": [
+          {
+            "_type": "span",
+            "text": "وهذه فقرة أخرى تتبع العنوان الفرعي لمزيد من التفاصيل."
           }
         ]
       }
