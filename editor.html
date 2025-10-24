@@ -1,0 +1,492 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GitHub Article Web Editor</title>
+    <style>
+        /* --- DARK MODE STYLES APPLIED --- */
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+            background: #121212; /* Dark background */
+            color: #e0e0e0;     /* Light text */
+            margin: 0;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        div { box-sizing: border-box; }
+        input, button, textarea {
+            font-family: inherit;
+            font-size: 14px;
+            /* Dark inputs */
+            background: #252525;
+            color: #e0e0e0;
+            border: 1px solid #444;
+            border-radius: 4px;
+        }
+        input::placeholder, textarea::placeholder { color: #888; }
+        
+        .config-bar {
+            background: #1e1e1e; /* Dark UI element bg */
+            padding: 10px 20px;
+            border-bottom: 1px solid #333; /* Dark border */
+            display: flex;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        .config-bar div { margin-right: 20px; margin-bottom: 5px; }
+        .config-bar label { font-size: 12px; font-weight: 600; margin-right: 5px; }
+        .config-bar input { padding: 5px; }
+        .config-bar input[type="password"] { width: 250px; }
+        .config-bar button { padding: 8px 12px; background: #007bff; color: white; border: none; cursor: pointer; font-weight: bold; }
+        .config-bar button:hover { background: #0056b3; }
+        
+        .main-content { display: flex; flex-grow: 1; overflow: hidden; padding: 10px; }
+        
+        .article-list-pane {
+            width: 350px;
+            min-width: 300px;
+            background: #1e1e1e;
+            border-radius: 8px;
+            border: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+            margin-right: 10px;
+        }
+        .article-list-pane h3 { margin: 0; padding: 15px; border-bottom: 1px solid #333; }
+        .article-list { overflow-y: auto; flex-grow: 1; }
+        .article-item { padding: 10px 15px; border-bottom: 1px solid #2a2a2a; cursor: pointer; }
+        .article-item:hover { background: #2a2a2a; }
+        .article-item.selected { background: #004a7c; }
+        .article-item strong { display: block; font-size: 14px; color: #f0f0f0; direction: rtl; text-align: right; }
+        .article-item span { display: block; font-size: 12px; color: #888; }
+        
+        .editor-pane {
+            flex-grow: 1;
+            background: #1e1e1e;
+            border-radius: 8px;
+            border: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+        }
+        .editor-fields { padding: 15px; border-bottom: 1px solid #333; }
+        .editor-fields div { margin-bottom: 10px; display: flex; align-items: center; }
+        .editor-fields label { font-weight: 600; width: 120px; }
+        .editor-fields input { flex-grow: 1; padding: 8px; }
+        #editor-title { direction: rtl; text-align: right; }
+        
+        #editor-body {
+            flex-grow: 1;
+            width: 100%;
+            padding: 10px;
+            box-sizing: border-box;
+            border: none;
+            font-family: "Tahoma", sans-serif;
+            font-size: 14px;
+            resize: none;
+            direction: rtl;
+            text-align: right;
+        }
+        #editor-body:focus { outline: none; }
+        
+        .image-upload-section {
+            padding: 10px 15px;
+            border-bottom: 1px solid #333;
+            background: #2a2a2a;
+        }
+        .image-upload-section div { display: flex; align-items: center; }
+        .image-upload-section input[type="file"] { flex-grow: 1; border: none; padding: 0; }
+        .image-upload-section button { padding: 6px 10px; background: #5c6bc0; color: white; border: none; border-radius: 4px; cursor: pointer; margin-left: 10px; }
+        .image-upload-section button:hover { background: #3f51b5; }
+        
+        .action-bar {
+            background: #1e1e1e;
+            padding: 10px 20px;
+            border-top: 1px solid #333;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .action-bar button { padding: 8px 12px; border: none; border-radius: 4px; cursor: pointer; font-weight: bold; }
+        #btn-new { background: #17a2b8; color: white; }
+        #btn-save { background: #28a745; color: white; }
+        #btn-delete { background: #dc3545; color: white; }
+        #btn-upload-json { background: #4CAF50; color: white; font-size: 14px; }
+        #status { font-size: 14px; font-weight: 500; }
+    </style>
+</head>
+<body>
+
+    <div class="config-bar">
+        <div>
+            <label for="token">password:</label>
+            <input type="password" id="token" placeholder="password here">
+        </div>
+
+        <div style="display: none;">
+            <label for="repo">Repo:</label>
+            <input type="text" id="repo" value="mohhilat/articels">
+        </div>
+        <div style="display: none;">
+            <label for="path">JSON Path:</label>
+            <input type="text" id="path" value="articles.json">
+        </div>
+
+        <button id="btn-load">Load</button>
+    </div>
+
+    <div class="main-content">
+        <div class="article-list-pane">
+            <h3>Articles</h3>
+            <div id="article-list" class="article-list"></div>
+        </div>
+        <div class="editor-pane">
+            
+            <div class="image-upload-section">
+                <div>
+                    <input type="file" id="image-file-input" accept="image/png, image/jpeg, image/gif">
+                    <button id="btn-upload-image">Upload Image</button>
+                </div>
+            </div>
+
+            <div class="editor-fields">
+                <div>
+                    <label for="editor-title">Title:</label>
+                    <input type="text" id="editor-title">
+                </div>
+                <div>
+                    <label for="editor-slug">Slug:</label>
+                    <input type="text" id="editor-slug">
+                </div>
+                <div>
+                    <label for="editor-image">Image Path:</label>
+                    <input type="text" id="editor-image" placeholder="e.g., images/my-pic.jpg">
+                </div>
+            </div>
+            <textarea id="editor-body" placeholder="Write your article body here..."></textarea>
+        </div>
+    </div>
+
+    <div class="action-bar">
+        <div>
+            <button id="btn-new">New</button>
+            <button id="btn-save" style="margin: 0 5px;">Save (Locally)</button>
+            <button id="btn-delete">Delete</button>
+        </div>
+        <div id="status">Please load data.</div>
+        <button id="btn-upload-json">Upload All Changes</button>
+    </div>
+
+    <script>
+        // --- Globals ---
+        let articles = [];
+        let currentSha = null;
+        let currentSlug = null;
+        let isDirty = false; // Tracks if local changes exist
+
+        // --- DOM Elements ---
+        const tokenEl = document.getElementById('token');
+        const repoEl = document.getElementById('repo');
+        const pathEl = document.getElementById('path');
+        const statusEl = document.getElementById('status');
+        const articleListEl = document.getElementById('article-list');
+        const titleEl = document.getElementById('editor-title');
+        const slugEl = document.getElementById('editor-slug');
+        const imageEl = document.getElementById('editor-image');
+        const bodyEl = document.getElementById('editor-body');
+        const imageFileEl = document.getElementById('image-file-input');
+
+        // --- GitHub API Functions ---
+
+        async function loadFromGitHub() {
+            const token = tokenEl.value;
+            const repo = repoEl.value;
+            const path = pathEl.value;
+            if (!token || !repo || !path) {
+                return showStatus("Token, Repo, and Path are required.", "red");
+            }
+            
+            showStatus("Loading file...", "blue");
+            const url = `https://api.github.com/repos/${repo}/contents/${path}`;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'GET',
+                    headers: { 'Authorization': `token ${token}`, 'Accept': 'application/vnd.github.v3+json' }
+                });
+
+                if (!response.ok) throw new Error(`GitHub API error: ${response.statusText}`);
+
+                const data = await response.json();
+                
+                // --- FIX FOR ARABIC (UTF-8) ---
+                const binaryString = atob(data.content);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                    bytes[i] = binaryString.charCodeAt(i);
+                }
+                const decodedContent = new TextDecoder('utf-8').decode(bytes);
+                
+                currentSha = data.sha;
+                articles = JSON.parse(decodedContent);
+                isDirty = false;
+
+                refreshArticleList();
+                showStatus(`Loaded ${articles.length} articles successfully.`, "green");
+
+            } catch (error) {
+                console.error(error);
+                showStatus(`Error loading JSON: ${error.message}`, "red");
+            }
+        }
+        
+        async function uploadJsonToGitHub() {
+            if (!isDirty) {
+                return showStatus("No local changes to upload.", "blue");
+            }
+            if (!currentSha) {
+                return showStatus("Error: Must load from GitHub first.", "red");
+            }
+
+            const token = tokenEl.value;
+            const repo = repoEl.value;
+            const path = pathEl.value;
+            
+            showStatus("Uploading all changes to JSON...", "blue");
+
+            // --- FIX FOR ARABIC (UTF-8) ---
+            const content = JSON.stringify(articles, null, 2);
+            const bytes = new TextEncoder().encode(content);
+            let binaryString = '';
+            for (let i = 0; i < bytes.length; i++) {
+                binaryString += String.fromCharCode(bytes[i]);
+            }
+            const encodedContent = btoa(binaryString);
+
+            const url = `https://api.github.com/repos/${repo}/contents/${path}`;
+
+            try {
+                const response = await fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        'message': 'Update articles via web editor',
+                        'content': encodedContent,
+                        'sha': currentSha 
+                    })
+                });
+
+                if (!response.ok) throw new Error(`GitHub API error: ${response.statusText}`);
+
+                const data = await response.json();
+                currentSha = data.content.sha; 
+                isDirty = false;
+                showStatus("JSON Upload successful!", "green");
+
+            } catch (error) {
+                console.error(error);
+                showStatus(`Upload Error: ${error.message}`, "red");
+            }
+        }
+
+        async function uploadImage() {
+            const token = tokenEl.value;
+            const repo = repoEl.value;
+            const file = imageFileEl.files[0];
+
+            if (!file) {
+                return showStatus("No image selected.", "red");
+            }
+            if (!token || !repo) {
+                return showStatus("Token and Repo are required to upload images.", "red");
+            }
+
+            const imagePath = `images/${file.name}`;
+            showStatus(`Uploading ${file.name}...`, "blue");
+
+            try {
+                const base64Content = await fileToBase64(file);
+                
+                const url = `https://api.github.com/repos/${repo}/contents/${imagePath}`;
+                const response = await fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${token}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        'message': `Upload image: ${file.name}`,
+                        'content': base64Content
+                    })
+                });
+
+                if (!response.ok) throw new Error(`Image Upload API error: ${response.statusText}`);
+
+                const data = await response.json();
+                imageEl.value = imagePath;
+                showStatus(`Image uploaded! Path set to: ${imagePath}`, "green");
+                imageFileEl.value = null; 
+
+            } catch (error) {
+                console.error(error);
+                showStatus(`Image Upload Error: ${error.message}`, "red");
+            }
+        }
+        
+        function fileToBase64(file) {
+            return new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(file);
+                reader.onload = () => {
+                    const base64 = reader.result.split(',')[1];
+                    resolve(base64);
+                };
+                reader.onerror = error => reject(error);
+            });
+        }
+
+        // --- UI & Editor Functions ---
+
+        function refreshArticleList() {
+            articleListEl.innerHTML = ""; 
+            articles.sort((a, b) => (b.publishedAt || '').localeCompare(a.publishedAt || ''));
+            articles.forEach(article => {
+                const item = document.createElement('div');
+                item.className = 'article-item';
+                item.dataset.slug = article.slug;
+                item.innerHTML = `
+                    <strong>${article.title || 'No Title'}</strong>
+                    <span>${article.slug}</span>
+                `;
+                item.addEventListener('click', () => loadArticleBySlug(article.slug));
+                articleListEl.appendChild(item);
+            });
+        }
+
+        function loadArticleBySlug(slug) {
+            const article = articles.find(a => a.slug === slug);
+            if (!article) return;
+            titleEl.value = article.title || '';
+            slugEl.value = article.slug || '';
+            imageEl.value = article.mainImage || '';
+            bodyEl.value = convertBodyJsonToPlainText(article.body);
+            currentSlug = slug;
+            highlightSelectedArticle(slug);
+            showStatus(`Loaded: ${article.title}`);
+        }
+
+        function clearEditor() {
+            titleEl.value = '';
+            slugEl.value = '';
+            imageEl.value = '';
+            bodyEl.value = '';
+            currentSlug = null;
+            highlightSelectedArticle(null);
+        }
+
+        function saveArticle() {
+            const title = titleEl.value.trim();
+            const slug = slugEl.value.trim();
+            if (!title || !slug) {
+                return showStatus("Error: Title and Slug are required to save.", "red");
+            }
+
+            const plainTextBody = bodyEl.value.trim();
+            const bodyJson = convertPlainTextToBodyJson(plainTextBody);
+
+            const articleData = {
+                "slug": slug,
+                "title": title,
+                "mainImage": imageEl.value.trim(),
+                "body": bodyJson,
+                "publishedAt": new Date().toISOString()
+            };
+
+            let existingIndex = articles.findIndex(a => a.slug === slug);
+
+            if (currentSlug && currentSlug !== slug) {
+                let oldIndex = articles.findIndex(a => a.slug === currentSlug);
+                if (oldIndex !== -1) articles.splice(oldIndex, 1);
+                articles.push(articleData);
+            } else if (existingIndex !== -1) {
+                articleData.publishedAt = articles[existingIndex].publishedAt || articleData.publishedAt;
+                articles[existingIndex] = articleData;
+            } else {
+                articles.push(articleData);
+            }
+
+            currentSlug = slug;
+            isDirty = true;
+            refreshArticleList();
+            highlightSelectedArticle(slug);
+            showStatus(`Saved "${title}" locally. Ready to upload.`, "green");
+        }
+        
+        function deleteArticle() {
+            if (!currentSlug) {
+                return showStatus("No article selected to delete.", "red");
+            }
+            if (!confirm(`Are you sure you want to delete '${currentSlug}'?`)) {
+                return;
+            }
+            articles = articles.filter(a => a.slug !== currentSlug);
+            isDirty = true;
+            clearEditor();
+            refreshArticleList();
+            showStatus(`Deleted "${currentSlug}" locally. Ready to upload.`, "green");
+        }
+
+        // --- Helper Functions ---
+
+        function highlightSelectedArticle(slug) {
+            document.querySelectorAll('.article-item').forEach(item => {
+                item.classList.toggle('selected', item.dataset.slug === slug);
+            });
+        }
+        
+        function showStatus(message, color) {
+            statusEl.textContent = message;
+            statusEl.style.color = color || "#e0e0e0"; // Default to light text
+            if (color === 'red') statusEl.style.color = '#ff8a80';
+            if (color === 'green') statusEl.style.color = '#b9f6ca';
+            if (color === 'blue') statusEl.style.color = '#82b1ff';
+        }
+
+        function convertBodyJsonToPlainText(bodyJson) {
+            if (!Array.isArray(bodyJson)) return "";
+            return bodyJson
+                .filter(block => block._type === 'block' && Array.isArray(block.children))
+                .map(block => 
+                    block.children
+                        .filter(child => child._type === 'span' && child.text)
+                        .map(child => child.text)
+                        .join("")
+                )
+                .join("\n\n");
+        }
+
+        function convertPlainTextToBodyJson(plainText) {
+            return plainText.split(/\n\s*\n/).filter(p => p.trim()).map(para => ({
+                "_type": "block",
+                "style": "normal",
+                "children": [{ "_type": "span", "text": para }]
+            }));
+        }
+
+        // --- Event Listeners ---
+        document.getElementById('btn-load').addEventListener('click', loadFromGitHub);
+        document.getElementById('btn-upload-json').addEventListener('click', uploadJsonToGitHub);
+        document.getElementById('btn-upload-image').addEventListener('click', uploadImage); 
+        document.getElementById('btn-new').addEventListener('click', clearEditor);
+        document.getElementById('btn-save').addEventListener('click', saveArticle);
+        document.getElementById('btn-delete').addEventListener('click', deleteArticle);
+
+    </script>
+</body>
+</html>
