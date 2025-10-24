@@ -45,7 +45,7 @@ async function fetchArticles() {
         const result = await response.json();
         
         // Sort articles by date, newest first
-        result.sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt));
+        result.sort((a, b) => new Date(b.publishedAt) - new Date(a, b));
 
         articles = result;
         return articles;
@@ -55,12 +55,84 @@ async function fetchArticles() {
     }
 }
 
+
+// --- NEW: SETTINGS & PREFERENCES LOGIC ---
+
+// --- NEW: Define the available fonts
+// These keys match the [data-font="..."] attributes in the CSS
+const FONT_OPTIONS = ['serif', 'naskh', 'sans', 'tajawal'];
+
+// Applies the theme to the body and updates the button icon
+function applyTheme(theme) {
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    if (theme === 'dark') {
+        document.body.dataset.theme = 'dark';
+        if (themeToggleBtn) themeToggleBtn.innerText = '☀️';
+    } else {
+        document.body.dataset.theme = 'light';
+        if (themeToggleBtn) themeToggleBtn.innerText = '🌙';
+    }
+}
+
+// Applies the font preference to the body
+function applyFont(fontKey) {
+    // Default to 'serif' if fontKey is invalid
+    if (!FONT_OPTIONS.includes(fontKey)) {
+        fontKey = 'serif';
+    }
+    document.body.dataset.font = fontKey;
+}
+
+// Loads saved preferences from localStorage on page load
+function loadPreferences() {
+    const savedTheme = localStorage.getItem('theme') || 'light';
+    const savedFont = localStorage.getItem('font') || 'serif'; // Default to serif (Amiri)
+    applyTheme(savedTheme);
+    applyFont(savedFont);
+}
+
+
 // --- PAGE INITIALIZATION ---
 document.addEventListener('DOMContentLoaded', () => {
+    
+    // --- NEW: Load preferences as soon as the DOM is ready
+    loadPreferences();
+
+    // Page-specific initialization
     if (document.getElementById('articlesList')) {
         initializeProfilePage();
     } else if (document.getElementById('articleContent')) {
         initializeArticlePage();
+    }
+
+    // --- NEW: Attach listeners for settings buttons (on all pages) ---
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const fontToggleBtn = document.getElementById('fontToggleBtn');
+
+    if (themeToggleBtn) {
+        themeToggleBtn.addEventListener('click', () => {
+            const currentTheme = document.body.dataset.theme || 'light';
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            applyTheme(newTheme);
+            localStorage.setItem('theme', newTheme);
+        });
+    }
+
+    // --- UPDATED: Font button logic to cycle through options ---
+    if (fontToggleBtn) {
+        fontToggleBtn.addEventListener('click', () => {
+            const currentFont = document.body.dataset.font || 'serif';
+            
+            // Find the index of the current font
+            const currentIndex = FONT_OPTIONS.indexOf(currentFont);
+            
+            // Get the next font, wrapping around to the beginning
+            const nextIndex = (currentIndex + 1) % FONT_OPTIONS.length;
+            const newFont = FONT_OPTIONS[nextIndex];
+            
+            applyFont(newFont);
+            localStorage.setItem('font', newFont);
+        });
     }
 });
 

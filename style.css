@@ -1,14 +1,28 @@
 /* --- Palette & Arabic Fonts --- */
 :root {
+    /* --- UPDATED: Added new font variables --- */
+    --font-primary: 'Cairo', sans-serif; /* Sans-serif (UI) */
+    --font-reading-serif: 'Amiri', serif; /* Default Serif */
+    --font-reading-naskh: 'Noto Naskh Arabic', serif; /* New Serif */
+    --font-reading-tajawal: 'Tajawal', sans-serif; /* New Sans-serif */
+    
+    /* --- Light Mode (Default) --- */
     --bg-color: #f9f9f9;
     --card-bg-color: #ffffff;
     --text-color: #1a1a1a;
     --secondary-text-color: #757575;
     --border-color: #e0e0e0;
-    
-    /* Using modern Arabic fonts */
-    --font-primary: 'Cairo', sans-serif;
-    --font-secondary: 'Amiri', serif;
+    --search-bg: #f0f0f0;
+}
+
+/* --- NEW: Dark Mode Variables --- */
+body[data-theme="dark"] {
+    --bg-color: #1a1a1a;
+    --card-bg-color: #252525;
+    --text-color: #f5f5f5;
+    --secondary-text-color: #999999;
+    --border-color: #3b3b3b;
+    --search-bg: #303030;
 }
 
 /* --- Global Styles & Reset --- */
@@ -24,6 +38,9 @@ body {
     color: var(--text-color);
     line-height: 1.7; /* Adjusted for better Arabic readability */
     -webkit-font-smoothing: antialiased;
+    
+    /* --- NEW: Smooth transition for theme changes --- */
+    transition: background-color 0.3s ease, color 0.3s ease;
 }
 
 .container {
@@ -46,7 +63,8 @@ body {
     border: 1px solid var(--border-color);
     margin-bottom: 25px;
     padding: 5px;
-    background-color: white;
+    /* Updated: Use variable for light/dark compatibility */
+    background-color: var(--card-bg-color); 
 }
 
 .profile-name {
@@ -86,7 +104,10 @@ body {
     padding: 14px 18px;
     font-size: 1rem;
     font-family: var(--font-primary); /* Ensure Arabic font is used */
-    background-color: #f0f0f0;
+    
+    /* Updated: Use variables */
+    background-color: var(--search-bg);
+    color: var(--text-color); 
     border: none;
     border-radius: 8px;
     outline: none;
@@ -118,9 +139,17 @@ body {
 
 .article-card:hover {
     transform: translateY(-4px);
-    border-color: var(--text-color);
+    /* Updated: Use variable for border */
+    border-color: var(--secondary-text-color); 
     box-shadow: 0 8px 25px rgba(0, 0, 0, 0.08);
 }
+
+/* --- NEW: Dark mode hover effect --- */
+body[data-theme="dark"] .article-card:hover {
+     border-color: var(--secondary-text-color);
+     box-shadow: 0 8px 25px rgba(255, 255, 255, 0.08);
+}
+
 
 .card-image {
     width: 100%;
@@ -147,7 +176,8 @@ body {
 
 .article-excerpt {
     font-size: 0.95rem;
-    color: #555;
+    /* Updated: Use variable */
+    color: var(--secondary-text-color); 
     margin-top: 15px;
     line-height: 1.6;
 }
@@ -192,14 +222,65 @@ body {
 }
 
 #articleContent .article-body {
-    font-family: var(--font-secondary);
+    /* UPDATED: Set default font */
+    font-family: var(--font-reading-serif); 
     font-size: 1.2rem;
     line-height: 2; /* Increased for better Arabic readability */
-    color: #2b2b2b;
+    color: var(--text-color); /* Updated */
 }
+
+/* --- UPDATED: Font Toggle Logic --- */
+/* Default is Amiri (serif) */
+body[data-font="serif"] #articleContent .article-body {
+    font-family: var(--font-reading-serif);
+}
+/* Cairo (sans-serif) */
+body[data-font="sans"] #articleContent .article-body {
+    font-family: var(--font-primary);
+}
+/* Noto Naskh (serif) */
+body[data-font="naskh"] #articleContent .article-body {
+    font-family: var(--font-reading-naskh);
+}
+/* Tajawal (sans-serif) */
+body[data-font="tajawal"] #articleContent .article-body {
+    font-family: var(--font-reading-tajawal);
+}
+
 
 #articleContent .article-body p {
     margin-bottom: 1.8em;
+}
+
+/* --- NEW: Settings Menu --- */
+.settings-menu {
+    position: fixed;
+    top: 20px;
+    left: 20px; /* Positioned for RTL layout */
+    z-index: 1000;
+    display: flex;
+    gap: 10px;
+}
+
+.settings-menu button {
+    width: 44px;
+    height: 44px;
+    border-radius: 50%;
+    border: 1px solid var(--border-color);
+    background-color: var(--card-bg-color);
+    color: var(--text-color);
+    font-size: 1.2rem;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+    transition: all 0.3s ease;
+}
+
+.settings-menu button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 6px 16px rgba(0, 0, 0, 0.12);
 }
 
 /* --- Responsive Design --- */
