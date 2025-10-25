@@ -339,17 +339,28 @@
             }
         }
         
+        // --- THIS IS THE CORRECTED FUNCTION ---
         function fileToBase64(file) {
             return new Promise((resolve, reject) => {
                 const reader = new FileReader();
-                reader.readAsDataURL(file);
+                // 1. Read the file as raw bytes (ArrayBuffer)
+                reader.readAsArrayBuffer(file); 
+                
                 reader.onload = () => {
-                    const base64 = reader.result.split(',')[1];
+                    // 2. Use the same logic from your uploadJsonToGitHub function
+                    const bytes = new Uint8Array(reader.result);
+                    let binaryString = '';
+                    for (let i = 0; i < bytes.length; i++) {
+                        binaryString += String.fromCharCode(bytes[i]);
+                    }
+                    // 3. Encode the "binary string" to base64
+                    const base64 = btoa(binaryString);
                     resolve(base64);
                 };
                 reader.onerror = error => reject(error);
             });
         }
+        // --- END OF CORRECTION ---
 
         // --- UI & Editor Functions ---
 
